@@ -56,4 +56,22 @@ function M.warn_if_github_source(root)
   return true
 end
 
+---@param root? string
+function M.warn_if_github_source_async(root)
+  if vim.fn.executable('git') ~= 1 then
+    return
+  end
+
+  pcall(
+    vim.system,
+    { 'git', '-C', root or M.plugin_root(), 'config', '--get', 'remote.origin.url' },
+    { text = true },
+    vim.schedule_wrap(function(result)
+      if result.code == 0 and M.is_github_origin(vim.trim(result.stdout or '')) then
+        vim.notify_once(message, vim.log.levels.WARN)
+      end
+    end)
+  )
+end
+
 return M
